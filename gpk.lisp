@@ -48,6 +48,14 @@
 )
 
 ;;; stuff pertaining to fitness
+(defstruct program-fitness
+	"Defines a structure for holding a program and its associated fitnesses" 
+	prog
+	raw
+	std
+	adj
+	nrm
+)
 (defun stdfitness (rawfitness bestValue)
 	"Function that takes an individual's raw fitness and converts it to standardized fitness. The first argument is jsut that raw fitness.  The second argument is the best possible value. If the raw fitness is lowest is best, then give this parameter 0. If highest is best, then give it the best value.  If Highest is best and the best value is unknown, use an arbitrarily high value"
 	(abs (- bestValue rawfitness))
@@ -65,5 +73,5 @@
 	(setq std (loop for x from 0 to (- (length rawfitnesses) 1) collect (stdfitness (nth x rawfitnesses) bestValue)))
 	(setq adj (loop for x from 0 to (- (length std) 1) collect (adjfitness (nth x std))))
 	(setq sum (apply #'+ adj))
-	(loop for x from 1 to (- (length adj) 1) collect (nrmfitness (nth x adj) sum))
+	(loop for x from 0 to (- (length adj) 1) collect (nrmfitness (nth x adj) sum))
 )
