@@ -128,7 +128,24 @@
 )
 
 ;;; stuff pertaining to creating a new generation
+(defun pick-individual (programs)
+	"Takes an array of fully filled out program-fitness structures and selects a single individual 
+	from the population based on the fitness probability (normalized fitness)"
+	(setq rnd (random 1.0)) 
+	(setq idx (nth 0 (array-dimensions programs))) ;sets the index to the most fit individual
+	(loop while (>= rnd 0)
+		do (decf idx 1)
+		do (decf rnd (program-fitness-nrm (aref programs idx)))
+	)
+	(aref programs idx)
+)
+
 (defun select (programs)
 	"takes an array of fully filled out program-fitness structs that are sorted in ascending order by normalized fitness.
 	Creates a population of equal size based on the fitnesses of the current population.  Does not perform cross-over or mutation"
+	(setq mating-pool (make-array (nth 0 (array-dimensions programs)))) ; make a new array to store the mating pool for the next generation
+	(dotimes (n (nth 0 (array-dimensions programs)))
+		(setf (aref mating-pool n) (pick-individual programs))
+	)
+	mating-pool
 )
