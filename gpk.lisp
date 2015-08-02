@@ -149,3 +149,18 @@
 	)
 	mating-pool
 )
+
+(defun get-num-nodes (program)
+	"function that takees a single program as an argument and finds how many nodes it has."
+
+	(let ((n 0) (result 0))
+		(if (atom program) ; if the program is an atom, and thus has no children...
+			(incf result 1) ; return the 1 without doing anything
+			(loop while (not (eq (nth n program) nil)) ; else, while this node still has children...
+				do (incf result (get-num-nodes (nth n program))) ; add the numbr of nodes in this subtree to our result
+				do (incf n 1)
+			)
+		)
+		result
+	)
+)
