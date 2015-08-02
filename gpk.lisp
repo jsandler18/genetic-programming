@@ -56,22 +56,79 @@
 	adj
 	nrm
 )
+(defun rawfitness (programs fit-func)
+	"Takes a list of programs as a first argument and returns an array of program-fitness structures with the prog and raw fields filled in. 
+	Also takes the fitness function being used"
+	(setf prog-fit (make-array (length programs)))
+	(setq x 0)
+	(dolist (n programs) 
+		(setq rawfit (funcall fit-func n))
+		(setq fit-struct (make-program-fitness :prog n :raw rawfit)) ; creates a new program-fitness function
+		(setf (aref prog-fit x) fit-struct) 
+		(incf x 1)
+	)
+	prog-fit
+
+)
 (defun stdfitness (rawfitness bestValue)
-	"Function that takes an individual's raw fitness and converts it to standardized fitness. The first argument is jsut that raw fitness.  The second argument is the best possible value. If the raw fitness is lowest is best, then give this parameter 0. If highest is best, then give it the best value.  If Highest is best and the best value is unknown, use an arbitrarily high value"
-	(abs (- bestValue rawfitness))
+	"Function that takes an array ofprogram-fitness structures with raw fitness filled in and converts it to standardized fitness. The first argument is jsut that raw fitness.
+	The second argument is the best possible value. If the raw fitness is lowest is best, 
+	then give this parameter 0. If highest is best, then give it the best value. 
+	If Highest is best and the best value is unknown, use an arbitrarily high value"
+	(dotimes (x (nth 0 (array-dimensions rawfitness)))
+		(setq rawfit (program-fitness-raw (aref rawfitness x))) ;get the raw fitness of the element
+		(setq stdfit (abs (- bestValue rawfit)))
+		(setf (program-fitness-std (aref rawfitness x)) stdfit)
+	)
 )
 (defun adjfitness (stdfitness) 
-	"Function that takes an individual's standard fitness and turns it into adjusted fitness."
-	(/ 1 (+ 1 stdfitness))
+	"Function that takes an array of program-fitness structures with std filled in and converts it to adjusted fitness."
+	(dotimes (x (nth 0 (array-dimensions stdfitness)))
+		(setq stdfit (program-fitness-std (aref stdfitness x))) ;get the std fitness of the element
+		(setq adjfit (/ 1 (+ 1 stdfit)))
+		(setf (program-fitness-adj (aref stdfitness x)) adjfit)
+	)
+	
 )
-(defun nrmfitness (adjfitness sum-adjfitness)
-	"Takes the adjusted fitness of an induvidual and the sum of all of the adjusted fitnesses as arguments. puts out the normalized, or proportional fitness of that value"
-	(/ adjfitness sum-adjfitness)
+(defun nrmfitness (adjfitness)
+	"takes an array of program-fitness structures with adj filled in. puts out the normalized, or proportional fitness of that value"
+	(setq sum-adjfitness 0)
+	(dotimes (x (nth 0 (array-dimensions adjfitness)))
+		(incf sum-adjfitness (program-fitness-adj (aref adjfitness x)))
+	)
+	(dotimes (x (nth 0 (array-dimensions adjfitness)))
+		(setq adjfit (program-fitness-adj (aref adjfitness x)))
+		(setq nrmfit (/ adjfit sum-adjfitness))
+		(setf (program-fitness-nrm (aref adjfitness x)) nrmfit)
+	)
 )
-(defun listnrmfitness (rawfitnesses bestValue)
-	"takes a list of the raw fitnesses as an argument and spits out the a list that of the normalized fitnesses in the same order"
-	(setq std (loop for x from 0 to (- (length rawfitnesses) 1) collect (stdfitness (nth x rawfitnesses) bestValue)))
-	(setq adj (loop for x from 0 to (- (length std) 1) collect (adjfitness (nth x std))))
-	(setq sum (apply #'+ adj))
-	(loop for x from 0 to (- (length adj) 1) collect (nrmfitness (nth x adj) sum))
+(defun sort-fit-first (programs)
+	"Takes an array of fully filled program-fitness structures and sorts them such that the most fit are first. uses insertion sort"
+	(loop for i from 1 to (- (nth 0 (array-dimensions programs)) 1) 
+
+		do (setq x (aref programs i))
+		do (setq j i)
+		do (loop while (and (> j 0) (> (program-fitness-nrm (aref programs (- j 1))) (program-fitness-nrm x))) 
+			do (setf (aref programs j) (aref programs (- j 1)))
+			do (decf j 1)
+		)
+		do (setf (aref programs j) x)
+
+	)
+
+)
+(defun fit-and-sort (programs fit-func bestValue)
+	"Ties together all of the functions nessesary for preparing programs for selection"
+	(setq prog-ar (rawfitness programs fit-func))
+	(stdfitness prog-ar bestValue)
+	(adjfitness prog-ar)
+	(nrmfitness prog-ar)
+	(sort-fit-first prog-ar)
+	prog-ar
+)
+
+;;; stuff pertaining to creating a new generation
+(defun select (programs)
+	"takes an array of fully filled out program-fitness structs that are sorted in ascending order by normalized fitness.
+	Creates a population of equal size based on the fitnesses of the current population.  Does not perform cross-over or mutation"
 )

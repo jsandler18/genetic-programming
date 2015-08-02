@@ -18,3 +18,8 @@
 	"> operation that returns an int"
 	(if (> a1 a2) 1 -1)
 )
+
+;;; defines some lists for the gpk using these functions
+(setq functions '(rlog srt abs + - * %))
+(setq argmap '(1 1 1 2 2 2 2))
+(setq terminals '(0 1 2 3 4 5 6 7 8 9))
