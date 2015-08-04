@@ -68,7 +68,7 @@
 (defun rawfitness (programs fit-func)
 	"Takes an array of program-fitness structures with the prog  filled in and fills in raw field. 
 	Also takes the fitness function being used"
-	(dotimes (x (nth 0 (array-dimensions rawfitness)))
+	(dotimes (x (nth 0 (array-dimensions programs)))
 		(setf (program-fitness-raw (aref programs x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
 	)
 
@@ -249,8 +249,12 @@
 	Structures that are the result of crossover will not, and all fitness values will be nil"
 	(setf next-gen (make-array (nth 0 (array-dimensions programs)))) ;creates next gen array
 	(setq n 0)
-	(setq reprouction-times (ceiling (/ (nth 0 (array-dimensions programs)) 10))) ; a bit over 10% of next-gen is asexual reproduction
-	(setq crossover-times (floor (/ (nth 0 (array-dimensions programs)) 90))) ; a bit under 90% of next-gen is crossover
+	(setq reprouction-times (ceiling (* (nth 0 (array-dimensions programs)) .1))) ; a bit over 10% of next-gen is asexual reproduction
+	(setq crossover-times (floor (* (nth 0 (array-dimensions programs)) .9))) ; a bit under 90% of next-gen is crossover
+	(if (/= 0 (mod crossover-times 2)) ;if not an even number of crossover times, give one to reproduction times
+		(progn (incf reprouction-times 1) (decf crossover-times 1))
+		nil
+	)
 	;; do reproduction
 	(loop while (< n reprouction-times)
 		do (setf (aref next-gen n) (pick-individual programs)) ;picks an individual from last gen based on fitness and puts in next gen
@@ -262,9 +266,9 @@
 		do (let ((parent1 (program-fitness-prog (pick-individual programs))) ;pick two parents for crossover based on fitness
 			 (parent2 (program-fitness-prog (pick-individual programs))))
 			(crossover parent1 parent2) ;perform crossover
-			(setf (aref next-gen n) (make-program-fitness :prog parent1))
+			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog parent1))
 			(incf n 1)
-			(setf (aref next-gen n) (make-program-fitness :prog parent2))
+			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog parent2))
 
 		)
 		do (incf n 1)
