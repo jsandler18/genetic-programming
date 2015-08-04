@@ -46,7 +46,16 @@
 	result
 	
 )
-
+(defun first-gen (functions argument-map terminals pop-size max-size)
+	"creates an array of program-fitness structures from the rhah method"
+	(setq first-gen (make-array pop-size))
+	(setq x 0)
+	(dolist (n (rhah functions argument-map terminals pop-size max-size)) ;loops through results from rhah and adds to array
+		(setf (aref first-gen x) (make-program-fitness :prog n))
+		(incf x 1)
+	)
+	first-gen
+)
 ;;; stuff pertaining to fitness
 (defstruct program-fitness
 	"Defines a structure for holding a program and its associated fitnesses" 
@@ -57,17 +66,11 @@
 	nrm
 )
 (defun rawfitness (programs fit-func)
-	"Takes a list of programs as a first argument and returns an array of program-fitness structures with the prog and raw fields filled in. 
+	"Takes an array of program-fitness structures with the prog  filled in and fills in raw field. 
 	Also takes the fitness function being used"
-	(setf prog-fit (make-array (length programs)))
-	(setq x 0)
-	(dolist (n programs) 
-		(setq rawfit (funcall fit-func n))
-		(setq fit-struct (make-program-fitness :prog n :raw rawfit)) ; creates a new program-fitness function
-		(setf (aref prog-fit x) fit-struct) 
-		(incf x 1)
+	(dotimes (x (nth 0 (array-dimensions rawfitness)))
+		(setf (program-fitness-raw (aref programs x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
 	)
-	prog-fit
 
 )
 (defun stdfitness (rawfitness bestValue)
@@ -230,18 +233,42 @@
 )
 (defun crossover (parent1 parent2)
 	"performs the crossover operation on the given parents.  This function modifies the given programs"
-	(print parent1)
-	(print parent2)
-	(setq cross-point-1 (random (get-num-nodes parent1)))
-	(setq cross-point-2 (random (get-num-nodes parent2)))
-	(print cross-point-1)
-	(print cross-point-2)
+
+	(setq cross-point-1 (get-good-cross-point parent1))
+	(setq cross-point-2 (get-good-cross-point parent2))
+
 	(setq swap-1 (get-nth-subtree parent1 cross-point-1))
 	(setq swap-2 (get-nth-subtree parent2 cross-point-2))
-	(print swap-1)
-	(print swap-2)
+
 	(set-nth-subtree parent1 cross-point-1 swap-2)
 	(set-nth-subtree parent2 cross-point-2 swap-1)
-	(print parent1)
-	(print parent2)
+)
+(defun next-gen (programs)
+	"Takes an array of fully filled out program-fitness structures and returns an array of program-fitness structures that
+	holds the next generation.  Structures that were the result of asexual reproduction will still have fitness calculated for them.
+	Structures that are the result of crossover will not, and all fitness values will be nil"
+	(setf next-gen (make-array (nth 0 (array-dimensions programs)))) ;creates next gen array
+	(setq n 0)
+	(setq reprouction-times (ceiling (/ (nth 0 (array-dimensions programs)) 10))) ; a bit over 10% of next-gen is asexual reproduction
+	(setq crossover-times (floor (/ (nth 0 (array-dimensions programs)) 90))) ; a bit under 90% of next-gen is crossover
+	;; do reproduction
+	(loop while (< n reprouction-times)
+		do (setf (aref next-gen n) (pick-individual programs)) ;picks an individual from last gen based on fitness and puts in next gen
+		do (incf n 1)
+	)
+	(setq n 0)
+	;; do crossover
+	(loop while (< n crossover-times)
+		do (let ((parent1 (program-fitness-prog (pick-individual programs))) ;pick two parents for crossover based on fitness
+			 (parent2 (program-fitness-prog (pick-individual programs))))
+			(crossover parent1 parent2) ;perform crossover
+			(setf (aref next-gen n) (make-program-fitness :prog parent1))
+			(incf n 1)
+			(setf (aref next-gen n) (make-program-fitness :prog parent2))
+
+		)
+		do (incf n 1)
+	)
+	;; done
+	next-gen
 )
