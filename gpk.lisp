@@ -139,24 +139,37 @@
 	)
 	(aref programs idx)
 )
-(defun get-num-nodes (program)
-	"function that takees a single program as an argument and finds how many nodes it has."
+(defun get-good-cross-point (program)
+	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
+	a 10% chance of being chosen as the cross point and a non-leaf has a 90% chance."
 
-	(setq traversed 1)
+	(setq traversed 0)
 	(setq queue (list program))
+
+	;; these two lists are going to hold the breadth first locations of the tree nodes. they are sepatrated by 
+	;; leaves and non-leaves so i can more easily have different probabilities for selecting a leaf or a node
+	(setq leaves nil)
+	(setq non-leaves nil)
+
 	(loop while (/= 0 (length queue)) ; while queue is not empty
 		do (setq current (car queue)) ; dequeue
 		do (setq queue (cdr queue))
 
 		do (if (atom current)
-			nil ;atoms are leaves. nothing to do
-			(dolist (x (cdr current))
-				(setq queue (append queue (list x)))
-				(incf traversed 1)
+			(setq leaves (append leaves (list traversed)))
+			(progn (dolist (x (cdr current))
+					(setq queue (append queue (list x)))
+				)
+				(setq non-leaves (append non-leaves (list traversed)))
 			)
 		)
+		do (incf traversed 1)
 	)
-	traversed
+	(if (= 0 (random 10)) ; (random 10) == 0 is a 10% chance
+		(nth (random (length leaves)) leaves) ;pick random leaf (10%)
+		(nth (random (length non-leaves)) non-leaves) ;pick random non-leaf (90%)
+	)
+
 )
 
 (defun get-nth-subtree (program n)
