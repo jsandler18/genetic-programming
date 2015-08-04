@@ -139,34 +139,30 @@
 	)
 	(aref programs idx)
 )
-
-(defun select (programs)
-	"takes an array of fully filled out program-fitness structs that are sorted in ascending order by normalized fitness.
-	Creates a population of equal size based on the fitnesses of the current population.  Does not perform cross-over or mutation"
-	(setq mating-pool (make-array (nth 0 (array-dimensions programs)))) ; make a new array to store the mating pool for the next generation
-	(dotimes (n (nth 0 (array-dimensions programs)))
-		(setf (aref mating-pool n) (pick-individual programs))
-	)
-	mating-pool
-)
-
 (defun get-num-nodes (program)
 	"function that takees a single program as an argument and finds how many nodes it has."
 
-	(let ((n 0) (result 0))
-		(if (atom program) ; if the program is an atom, and thus has no children...
-			(incf result 1) ; return the 1 without doing anything
-			(loop while (not (eq (nth n program) nil)) ; else, while this node still has children...
-				do (incf result (get-num-nodes (nth n program))) ; add the numbr of nodes in this subtree to our result
-				do (incf n 1)
+	(setq traversed 1)
+	(setq queue (list program))
+	(loop while (/= 0 (length queue)) ; while queue is not empty
+		do (setq current (car queue)) ; dequeue
+		do (setq queue (cdr queue))
+
+		do (if (atom current)
+			nil ;atoms are leaves. nothing to do
+			(dolist (x (cdr current))
+				(setq queue (append queue (list x)))
+				(incf traversed 1)
 			)
 		)
-		result
 	)
+	traversed
 )
+
 (defun get-nth-subtree (program n)
 	"Gets the nth subtree of the given program returns program subtree. This is done in a breadth first way, so the whole program 
 	is n == 0, the program's first child is 1, second child is 2, etc."
+	(if (= n 0) (return-from get-nth-subtree program) nil)
 	(setq traversed 0)
 	(setq queue (list program))
 	(loop while (/= 0 (length queue)) ; while queue is not empty
@@ -175,41 +171,64 @@
 
 		do (if (atom current)
 			nil ;atoms are leaves. nothing to do
-			(dolist (x current)
+			(dolist (x (cdr current))
 				(setq queue (append queue (list x)))
+				(incf traversed 1)
+				(if (= traversed n)
+					(return-from get-nth-subtree x)
+					nil
+				)
 			)
-		)
-
-		do (if (= traversed n)
-			(return-from get-nth-subtree current)
-			(incf traversed 1)
 		)
 	)
 	nil ;shouldnt make it here
-
-
 )
+
 (defun set-nth-subtree (program n subtree)
 	"sets the nth subtree of the given program with the given subtree"
-	(setq traversed 1)
+	(if (= n 0) 
+		(return-from set-nth-subtree (if (atom subtree) 
+							(progn (setf (car program) subtree) (setf (cdr program) nil)) 
+							(progn (setf (car program) (car subtree)) (setf (cdr program) (cdr subtree)))
+						)
+		) 
+		nil
+	)
+	(setq traversed 0)
 	(setq queue (list program))
 	(loop while (/= 0 (length queue)) ; while queue is not empty
 		do (setq current (car queue)) ; dequeue
 		do (setq queue (cdr queue))
-		do (setq idx 0)
+		do (setq idx 1)
 		do (if (atom current)
 			nil ;atoms are leaves. nothing to do
-			(dolist (x current)
+			(dolist (x (cdr current))
 				(setq queue (append queue (list x)))
-
+				(incf traversed 1)
 				(if (= traversed n)
 					(setf (nth idx current) subtree)
 					nil
 				)
-				(incf traversed 1)
 				(incf idx 1)
 			)
 		) 
 	)
 	nil ;shouldnt make it here
+)
+(defun crossover (parent1 parent2)
+	"performs the crossover operation on the given parents.  This function modifies the given programs"
+	(print parent1)
+	(print parent2)
+	(setq cross-point-1 (random (get-num-nodes parent1)))
+	(setq cross-point-2 (random (get-num-nodes parent2)))
+	(print cross-point-1)
+	(print cross-point-2)
+	(setq swap-1 (get-nth-subtree parent1 cross-point-1))
+	(setq swap-2 (get-nth-subtree parent2 cross-point-2))
+	(print swap-1)
+	(print swap-2)
+	(set-nth-subtree parent1 cross-point-1 swap-2)
+	(set-nth-subtree parent2 cross-point-2 swap-1)
+	(print parent1)
+	(print parent2)
 )
