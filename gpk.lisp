@@ -164,3 +164,52 @@
 		result
 	)
 )
+(defun get-nth-subtree (program n)
+	"Gets the nth subtree of the given program returns program subtree. This is done in a breadth first way, so the whole program 
+	is n == 0, the program's first child is 1, second child is 2, etc."
+	(setq traversed 0)
+	(setq queue (list program))
+	(loop while (/= 0 (length queue)) ; while queue is not empty
+		do (setq current (car queue)) ; dequeue
+		do (setq queue (cdr queue))
+
+		do (if (atom current)
+			nil ;atoms are leaves. nothing to do
+			(dolist (x current)
+				(setq queue (append queue (list x)))
+			)
+		)
+
+		do (if (= traversed n)
+			(return-from get-nth-subtree current)
+			(incf traversed 1)
+		)
+	)
+	nil ;shouldnt make it here
+
+
+)
+(defun set-nth-subtree (program n subtree)
+	"sets the nth subtree of the given program with the given subtree"
+	(setq traversed 1)
+	(setq queue (list program))
+	(loop while (/= 0 (length queue)) ; while queue is not empty
+		do (setq current (car queue)) ; dequeue
+		do (setq queue (cdr queue))
+		do (setq idx 0)
+		do (if (atom current)
+			nil ;atoms are leaves. nothing to do
+			(dolist (x current)
+				(setq queue (append queue (list x)))
+
+				(if (= traversed n)
+					(setf (nth idx current) subtree)
+					nil
+				)
+				(incf traversed 1)
+				(incf idx 1)
+			)
+		) 
+	)
+	nil ;shouldnt make it here
+)
