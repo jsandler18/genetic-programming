@@ -67,7 +67,7 @@
 )
 (defun rawfitness (programs fit-func)
 	"Takes an array of program-fitness structures with the prog  filled in and fills in raw field. 
-	Also takes the fitness function being used"
+	Also takes the fitness function being used. The fitness function must take care of the case where the program just consists of a terminal"
 	(dotimes (x (nth 0 (array-dimensions programs)))
 		(setf (program-fitness-raw (aref programs x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
 	)
@@ -168,7 +168,7 @@
 		)
 		do (incf traversed 1)
 	)
-	(if (= 0 (random 10)) ; (random 10) == 0 is a 10% chance
+	(if (or (= 0 (random 10)) (= 0 (length non-leaves))) ; (random 10) == 0 is a 10% chance, length of non-leaves == 0 means pick from leaves
 		(nth (random (length leaves)) leaves) ;pick random leaf (10%)
 		(nth (random (length non-leaves)) non-leaves) ;pick random non-leaf (90%)
 	)
@@ -178,7 +178,8 @@
 (defun get-nth-subtree (program n)
 	"Gets the nth subtree of the given program returns program subtree. This is done in a breadth first way, so the whole program 
 	is n == 0, the program's first child is 1, second child is 2, etc."
-	(if (= n 0) (return-from get-nth-subtree program) nil)
+	;; if n == 0, return program. if n == 0 and the program length ==1, then the program is just a terminal, so return the terminal instead of a list containing the terminal
+	(if (= n 0) (if (= 1 (length program)) (return-from get-nth-subtree (car program)) (return-from get-nth-subtree program)) nil)
 	(setq traversed 0)
 	(setq queue (list program))
 	(loop while (/= 0 (length queue)) ; while queue is not empty
@@ -258,6 +259,7 @@
 	;; do reproduction
 	(loop while (< n reprouction-times)
 		do (setf (aref next-gen n) (pick-individual programs)) ;picks an individual from last gen based on fitness and puts in next gen
+		(print n)
 		do (incf n 1)
 	)
 	(setq n 0)
@@ -266,8 +268,10 @@
 		do (let ((parent1 (program-fitness-prog (pick-individual programs))) ;pick two parents for crossover based on fitness
 			 (parent2 (program-fitness-prog (pick-individual programs))))
 			(crossover parent1 parent2) ;perform crossover
+			(print (+ n reprouction-times))
 			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog parent1))
 			(incf n 1)
+			(print (+ n reprouction-times))
 			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog parent2))
 
 		)
@@ -275,4 +279,28 @@
 	)
 	;; done
 	next-gen
+)
+
+(defun start-gpk (functions argmap terminals pop-size fit-func best-value generations)
+	"runs the whole thing"
+	(setq gen (first-gen functions argmap terminals pop-size 6)) ;create initial generation
+	(setq best-of-all nil)
+	(setq best-of-gen nil)
+	;; generaton loop
+	(dotimes (n generations)
+		;;calculate fitness
+		(rawfitness gen fit-func)
+		(stdfitness gen best-value)
+		(adjfitness gen)
+		(nrmfitness gen)
+		(sort-fit-first gen)
+		;; check if this generation's best is better than overall best
+		(setq best-of-gen (aref gen 49))
+		(if (or (null best-of-all) (< (program-fitnes-std best-of-gen) (program-fitness-std best-of-all)))
+			(setq best-of-all best-of-gen)
+		)
+		;; get next generation
+		(setq gen (next-gen gen))
+	)
+	(list best-of-all best-of-gen)
 )
