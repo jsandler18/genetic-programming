@@ -68,9 +68,12 @@
 (defun rawfitness (programs fit-func)
 	"Takes an array of program-fitness structures with the prog  filled in and fills in raw field. 
 	Also takes the fitness function being used"
+	(setq raw-arr (make-array (nth 0 (array-dimensions programs))))
 	(dotimes (x (nth 0 (array-dimensions programs)))
-		(setf (program-fitness-raw (aref programs x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
+		(setf (aref raw-arr x) (make-program-fitness :prog (program-fitness-prog (aref programs x))))
+		(setf (program-fitness-raw (aref raw-arr x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
 	)
+	raw-arr
 
 )
 (defun stdfitness (rawfitness bestValue)
@@ -78,32 +81,38 @@
 	The second argument is the best possible value. If the raw fitness is lowest is best, 
 	then give this parameter 0. If highest is best, then give it the best value. 
 	If Highest is best and the best value is unknown, use an arbitrarily high value"
+	(setq std-arr (make-array (nth 0 (array-dimensions rawfitness))))
 	(dotimes (x (nth 0 (array-dimensions rawfitness)))
 		(setq rawfit (program-fitness-raw (aref rawfitness x))) ;get the raw fitness of the element
 		(setq stdfit (abs (- bestValue rawfit)))
-		(setf (program-fitness-std (aref rawfitness x)) stdfit)
+		(setf (aref std-arr x) (make-program-fitness :prog (program-fitness-prog (aref rawfitness x)) :raw rawfit :std stdfit))
 	)
+	std-arr
 )
 (defun adjfitness (stdfitness) 
 	"Function that takes an array of program-fitness structures with std filled in and converts it to adjusted fitness."
+	(setq adj-arr (make-array (nth 0 (array-dimensions stdfitness))))
 	(dotimes (x (nth 0 (array-dimensions stdfitness)))
 		(setq stdfit (program-fitness-std (aref stdfitness x))) ;get the std fitness of the element
 		(setq adjfit (/ 1 (+ 1 stdfit)))
-		(setf (program-fitness-adj (aref stdfitness x)) adjfit)
+		(setf (aref adj-arr x) (make-program-fitness :prog (program-fitness-prog (aref stdfitness x)) :raw (program-fitness-raw (aref stdfitness x)) :std stdfit :adj adjfit))
 	)
+	adj-arr
 	
 )
 (defun nrmfitness (adjfitness)
 	"takes an array of program-fitness structures with adj filled in. puts out the normalized, or proportional fitness of that value"
 	(setq sum-adjfitness 0)
+	(setq nrm-arr (make-array (nth 0 (array-dimensions adjfitness))))
 	(dotimes (x (nth 0 (array-dimensions adjfitness)))
 		(incf sum-adjfitness (program-fitness-adj (aref adjfitness x)))
 	)
 	(dotimes (x (nth 0 (array-dimensions adjfitness)))
 		(setq adjfit (program-fitness-adj (aref adjfitness x)))
 		(setq nrmfit (/ adjfit sum-adjfitness))
-		(setf (program-fitness-nrm (aref adjfitness x)) nrmfit)
+		(setf (aref nrm-arr x) (make-program-fitness :prog (program-fitness-prog (aref adjfitness x)) :raw (program-fitness-raw (aref adjfitness x)) :std (program-fitness-std (aref adjfitness x)) :adj adjfit :nrm nrmfit))
 	)
+	nrm-arr
 )
 (defun sort-fit-first (programs)
 	"Takes an array of fully filled program-fitness structures and sorts them such that the most fit are first. uses insertion sort"
@@ -118,14 +127,15 @@
 		do (setf (aref programs j) x)
 
 	)
+	programs
 
 )
 (defun fit-and-sort (programs fit-func bestValue)
 	"Ties together all of the functions nessesary for preparing programs for selection"
 	(setq prog-ar (rawfitness programs fit-func))
-	(stdfitness prog-ar bestValue)
-	(adjfitness prog-ar)
-	(nrmfitness prog-ar)
+	(setq prog-ar (stdfitness prog-ar bestValue))
+	(setq prog-ar (adjfitness prog-ar))
+	(setq prog-ar (nrmfitness prog-ar))
 	(sort-fit-first prog-ar)
 	prog-ar
 )
@@ -145,7 +155,10 @@
 (defun get-good-cross-point (program)
 	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
 	a 10% chance of being chosen as the cross point and a non-leaf has a 90% chance."
-
+	(if (= 1 (length program)
+		(return-from get-good-cross-point 0)
+		nil
+	)
 	(setq traversed 0)
 	(setq queue (list program))
 
