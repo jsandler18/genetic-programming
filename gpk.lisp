@@ -246,6 +246,9 @@
 )
 (defun crossover (parent1 parent2)
 	"performs the crossover operation on the given parents.  This function modifies the given programs"
+	
+	(setq p1-copy (copy-tree parent1))
+	(setq p2-copy (copy-tree parent2))	
 
 	(setq cross-point-1 (get-good-cross-point parent1))
 	(setq cross-point-2 (get-good-cross-point parent2))
@@ -253,8 +256,10 @@
 	(setq swap-1 (get-nth-subtree parent1 cross-point-1))
 	(setq swap-2 (get-nth-subtree parent2 cross-point-2))
 
-	(set-nth-subtree parent1 cross-point-1 swap-2)
-	(set-nth-subtree parent2 cross-point-2 swap-1)
+	(set-nth-subtree p1-copy cross-point-1 swap-2)
+	(set-nth-subtree p2-copy cross-point-2 swap-1)
+	
+	(list p1-copy p2-copy)
 )
 (defun next-gen (programs)
 	"Takes an array of fully filled out program-fitness structures and returns an array of program-fitness structures that
@@ -278,10 +283,10 @@
 	(loop while (< n crossover-times)
 		do (let ((parent1 (program-fitness-prog (pick-individual programs))) ;pick two parents for crossover based on fitness
 			 (parent2 (program-fitness-prog (pick-individual programs))))
-			(crossover parent1 parent2) ;perform crossover
-			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog parent1))
+			(setq crossed (crossover parent1 parent2)) ;perform crossover
+			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog (nth 0 crossed)))
 			(incf n 1)
-			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog parent2))
+			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog (nth 1 crossed)))
 
 		)
 		do (incf n 1)
