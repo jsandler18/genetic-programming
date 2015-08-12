@@ -214,7 +214,7 @@
 )
 
 (defun set-nth-subtree (program-in n subtree)
-	"sets the nth subtree of the given program with the given subtree"
+	"sets the nth subtree of the given program with the given subtreei. does not modify the given program and instead returns a modified copy"
 	(setq program (copy-tree program-in))
 	(if (= n 0) 
 		(return-from set-nth-subtree (if (atom subtree) 
@@ -246,7 +246,7 @@
 	program
 )
 (defun crossover (parent1 parent2)
-	"performs the crossover operation on the given parents.  This function modifies the given programs"
+	"performs the crossover operation on the given parents.  This function does not modify tihe given programs, and returns a list with the children in it"
 	
 	(setq p1-copy (copy-tree parent1))
 	(setq p2-copy (copy-tree parent2))	
@@ -294,4 +294,34 @@
 	)
 	;; done
 	next-gen
+)
+(defun just-do-it (functions argmap terminals pop-size max-depth fit-func best-value generations)
+	"runs the whole thing for the specified number of generations and returns a list with the first element being the best of run result and the second element being the best of generation result"
+	(setq best-of-run nil)
+	(setq best-of-generation nil)
+	;;make gen 0
+	(setq gen (first-gen functions argmap terminals pop-size max-depth))
+	;;loop through all generations
+	(dotimes (n generations)
+		(print n) 
+		;;eval fitness
+		(setq gen (fit-and-sort gen fit-func best-value))
+		;;get best of generation, see if has best of run
+		(setq best-of-generation (aref gen (- pop-size 1)))
+		(if (= 0 n)
+			(setq best-of-run best-of-generation) ; first run, there is no best of run yet
+			(if (< (program-fitness-std best-of-run) (program-fitness-std best-of-generation))
+				(setq best-of-run best-of-generation) ; best of generation is better
+				nil ; best of run is better, do nothing
+			)
+		)
+		;;check if best result is found
+		(if (= best-value (program-fitness-raw best-of-run))
+			(return-from just-do-it (list best-of-run best-of-generation))
+			nil
+		)
+		;;create next gen
+		(setq gen (next-gen gen))	
+	)
+	(list best-of-run best-of-generation)
 )
