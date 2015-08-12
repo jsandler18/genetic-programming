@@ -213,11 +213,12 @@
 	nil ;shouldnt make it here
 )
 
-(defun set-nth-subtree (program n subtree)
+(defun set-nth-subtree (program-in n subtree)
 	"sets the nth subtree of the given program with the given subtree"
+	(setq program (copy-tree program-in))
 	(if (= n 0) 
 		(return-from set-nth-subtree (if (atom subtree) 
-							(progn (setf (car program) subtree) (setf (cdr program) nil)) 
+							subtree 
 							(progn (setf (car program) (car subtree)) (setf (cdr program) (cdr subtree)))
 						)
 		) 
@@ -242,7 +243,7 @@
 			)
 		) 
 	)
-	nil ;shouldnt make it here
+	program
 )
 (defun crossover (parent1 parent2)
 	"performs the crossover operation on the given parents.  This function modifies the given programs"
