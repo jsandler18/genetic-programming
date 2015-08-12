@@ -155,7 +155,7 @@
 (defun get-good-cross-point (program)
 	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
 	a 10% chance of being chosen as the cross point and a non-leaf has a 90% chance."
-	(if (= 1 (length program)
+	(if (= 1 (length program))
 		(return-from get-good-cross-point 0)
 		nil
 	)
