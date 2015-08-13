@@ -137,6 +137,14 @@
 	(setq prog-ar (adjfitness prog-ar))
 	(setq prog-ar (nrmfitness prog-ar))
 	(sort-fit-first prog-ar)
+	;;correct if the sum of nrm fitness is slightly off from 1
+	(setq sum 0)
+	(dotimes (n (nth 0 (array-dimensions prog-ar))) 
+		(incf sum (program-fitness-nrm (aref prog-ar n)))
+	)
+	(setq off-from-one (- sum 1)) ;will be positive if sum > 1 and negative if sum < 1
+	(setq most-fit-nrm (program-fitness-nrm (aref prog-ar (- (nth 0 (array-dimensions prog-ar)) 1)))) ;most fit nrm is nrm fitness of last program in array
+	(setf (program-fitness-nrm (aref prog-ar (- (nth 0 (array-dimensions prog-ar)) 1))) (+ most-fit-nrm off-from-one)) ;add off from one
 	prog-ar
 )
 
@@ -303,7 +311,6 @@
 	(setq gen (first-gen functions argmap terminals pop-size max-depth))
 	;;loop through all generations
 	(dotimes (n generations)
-		(print n) 
 		;;eval fitness
 		(setq gen (fit-and-sort gen fit-func best-value))
 		;;get best of generation, see if has best of run
@@ -323,5 +330,5 @@
 		;;create next gen
 		(setq gen (next-gen gen))	
 	)
-	(list best-of-run best-of-generation)
+	(list best-of-run best-of-generation gen)
 )
