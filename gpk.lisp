@@ -156,13 +156,12 @@
 (defun pick-individual (programs)
 	"Takes an array of fully filled out program-fitness structures and selects a single individual 
 	from the population based on the fitness probability (normalized fitness)"
-	(setq rnd (random 1.0)) 
+	(setq rnd (random 1.0))
 	(setq idx (nth 0 (array-dimensions programs))) ;sets the index to the most fit individual
 	(loop while (>= rnd 0)
 		do (decf idx 1)
 		do (decf rnd (program-fitness-nrm (aref programs idx)))
 	)
-	(aref programs idx)
 )
 (defun get-good-cross-point (program)
 	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
@@ -331,10 +330,8 @@
 			nil
 		)
 		;;create next gen
-		(setq gen (next-gen gen))	
-		(print gen)
-		(print "============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================")
+		(setq gen (next-gen gen))
 	)
 	(setq gen (fit-and-sort gen fit-func best-value))
-	(list best-of-run best-of-generation gen)
+;	(list best-of-run best-of-generation gen)
 )
