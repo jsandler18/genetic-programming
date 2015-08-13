@@ -114,20 +114,24 @@
 	)
 	nrm-arr
 )
+
 (defun sort-fit-first (programs)
-	"Takes an array of fully filled program-fitness structures and sorts them such that the most fit are first. uses insertion sort"
-	(loop for i from 1 to (- (nth 0 (array-dimensions programs)) 1) 
-
-		do (setq x (aref programs i))
-		do (setq j i)
-		do (loop while (and (> j 0) (> (program-fitness-nrm (aref programs (- j 1))) (program-fitness-nrm x))) 
-			do (setf (aref programs j) (aref programs (- j 1)))
-			do (decf j 1)
+	"Takes an array of fully filled program-fitness structures and sorts them such that the most fit are first. uses bubble sort"
+	(setq swapped 1)
+	(setq to-traverse  (- (nth 0 (array-dimensions prog-ar)) 1))
+	(loop while (= 1 swapped)
+		do (setq swapped 0)
+		do (dotimes (n to-traverse)
+			(if (> (program-fitness-nrm (aref programs n)) (program-fitness-nrm (aref programs (+ n 1))))
+				(let ((tmp (aref programs (+ n 1))))
+					(setf (aref programs (+ n 1)) (aref programs n))
+					(setf (aref programs n) tmp)
+					(setq swapped 1)	
+				)
+				nil
+			)
 		)
-		do (setf (aref programs j) x)
-
 	)
-	programs
 
 )
 (defun fit-and-sort (programs fit-func bestValue)
@@ -296,7 +300,6 @@
 			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog (nth 0 crossed)))
 			(incf n 1)
 			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog (nth 1 crossed)))
-
 		)
 		do (incf n 1)
 	)
@@ -329,6 +332,9 @@
 		)
 		;;create next gen
 		(setq gen (next-gen gen))	
+		(print gen)
+		(print "============================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================")
 	)
+	(setq gen (fit-and-sort gen fit-func best-value))
 	(list best-of-run best-of-generation gen)
 )
