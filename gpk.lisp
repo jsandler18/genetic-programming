@@ -70,6 +70,7 @@
 	Also takes the fitness function being used"
 	(setq raw-arr (make-array (nth 0 (array-dimensions programs))))
 	(dotimes (x (nth 0 (array-dimensions programs)))
+		(print (aref programs x))
 		(setf (aref raw-arr x) (make-program-fitness :prog (program-fitness-prog (aref programs x))))
 		(setf (program-fitness-raw (aref raw-arr x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
 	)
@@ -257,20 +258,21 @@
 	)
 	program
 )
+
 (defun crossover (parent1 parent2)
 	"performs the crossover operation on the given parents.  This function does not modify tihe given programs, and returns a list with the children in it"
 	
 	(setq p1-copy (copy-tree parent1))
 	(setq p2-copy (copy-tree parent2))	
 
-	(setq cross-point-1 (get-good-cross-point parent1))
-	(setq cross-point-2 (get-good-cross-point parent2))
+	(setq cross-point-1 (get-good-cross-point p1-copy))
+	(setq cross-point-2 (get-good-cross-point p2-copy))
 
-	(setq swap-1 (get-nth-subtree parent1 cross-point-1))
-	(setq swap-2 (get-nth-subtree parent2 cross-point-2))
+	(setq swap-1 (get-nth-subtree p1-copy cross-point-1))
+	(setq swap-2 (get-nth-subtree p2-copy cross-point-2))
 
-	(set-nth-subtree p1-copy cross-point-1 swap-2)
-	(set-nth-subtree p2-copy cross-point-2 swap-1)
+	(setq p1-copy (set-nth-subtree p1-copy cross-point-1 swap-2))
+	(setq p2-copy (set-nth-subtree p2-copy cross-point-2 swap-1))
 	
 	(list p1-copy p2-copy)
 )
@@ -328,12 +330,15 @@
 		nil
 	)
 	;; do reproduction
+	
 	(loop while (< n reprouction-times)
 		do (setf (aref next-gen n) (pick-individual programs)) ;picks an individual from last gen based on fitness and puts in next gen
 		do (incf n 1)
 	)
+
 	(setq n 0)
-	;; do crossover
+
+	;; do crossover.
 	(loop while (< n crossover-times)
 		do (let ((parent1 (program-fitness-prog (pick-individual programs))) ;pick two parents for crossover based on fitness
 			 (parent2 (program-fitness-prog (pick-individual programs))))
@@ -341,10 +346,12 @@
 			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog (nth 0 crossed)))
 			(incf n 1)
 			(setf (aref next-gen (+ n reprouction-times)) (make-program-fitness :prog (nth 1 crossed)))
+
 		)
 		do (incf n 1)
 	)
 	;; done
+
 	next-gen
 )
 
@@ -376,6 +383,6 @@
 		;;create next gen
 		(setq gen (next-gen gen))
 	)
-;	(setq gen (fit-and-sort gen fit-func best-value))
+	(setq gen (fit-and-sort gen fit-func best-value))
 ;	(list best-of-run best-of-generation gen)
 )
