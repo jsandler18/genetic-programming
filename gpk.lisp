@@ -70,7 +70,6 @@
 	Also takes the fitness function being used"
 	(setq raw-arr (make-array (nth 0 (array-dimensions programs))))
 	(dotimes (x (nth 0 (array-dimensions programs)))
-		(print (aref programs x))
 		(setf (aref raw-arr x) (make-program-fitness :prog (program-fitness-prog (aref programs x))))
 		(setf (program-fitness-raw (aref raw-arr x)) (funcall fit-func (program-fitness-prog (aref programs x)))) ;sets raw fitness according to passed in fitness function
 	)
@@ -168,7 +167,7 @@
 (defun get-good-cross-point (program)
 	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
 	a 10% chance of being chosen as the cross point and a non-leaf has a 90% chance."
-	(if (= 1 (length program))
+	(if (or (atom program) (= 1 (length program)))
 		(return-from get-good-cross-point 0)
 		nil
 	)
@@ -230,11 +229,7 @@
 	"sets the nth subtree of the given program with the given subtreei. does not modify the given program and instead returns a modified copy"
 	(setq program (copy-tree program-in))
 	(if (= n 0) 
-		(return-from set-nth-subtree (if (atom subtree) 
-							subtree 
-							(progn (setf (car program) (car subtree)) (setf (cdr program) (cdr subtree)))
-						)
-		) 
+		(return-from set-nth-subtree subtree) 
 		nil
 	)
 	(setq traversed 0)
