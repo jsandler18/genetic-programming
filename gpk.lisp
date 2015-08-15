@@ -162,6 +162,7 @@
 		do (decf idx 1)
 		do (decf rnd (program-fitness-nrm (aref programs idx)))
 	)
+	(aref programs idx)
 )
 (defun get-good-cross-point (program)
 	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
@@ -192,7 +193,7 @@
 		)
 		do (incf traversed 1)
 	)
-	(if (= 0 (random 10)) ; (random 10) == 0 is a 10% chance
+	(if (= 0 (random 9)) ; (random 9) == 0 is a 10% chance
 		(nth (random (length leaves)) leaves) ;pick random leaf (10%)
 		(nth (random (length non-leaves)) non-leaves) ;pick random non-leaf (90%)
 	)
@@ -273,6 +274,47 @@
 	
 	(list p1-copy p2-copy)
 )
+(defun mutate (parent funcs funcargmap terms)
+	"Performs the mutation operation on the parent. does not modify. returns the mutated parent"
+	(setq child (copy-tree parent))
+
+	;;get length of program tree
+	(setq traversed 0)
+	(setq queue (list child))
+
+	(loop while (/= 0 (length queue)) ; while queue is not empty
+		do (setq current (car queue)) ; dequeue
+		do (setq queue (cdr queue))
+
+		do (if (atom current)
+			nil
+			(progn (dolist (x (cdr current))
+					(setq queue (append queue (list x)))
+				)
+			)
+		)
+		do (incf traversed 1)
+	)
+
+	;;use length to get random subtree
+	(setq mutation-point (random traversed))
+
+	;;create mutation
+	(setq mutation nil)
+	(setq mutation-size (+ 1 (random 8)))
+	(if (= 1 mutation-size)
+		(setq mutation (nth (random (length terms)) terms))
+		(if (= (random 1) 0) 
+			(setq mutation (full funcs funcargmap terms 1 mutation-size))
+			(setq mutation (grow funcs funcargmap terms 1 mutation-size))
+
+		)
+	)
+
+	;;set mutation
+	(set-nth-subtree child mutation-point mutation)
+
+)
 (defun next-gen (programs)
 	"Takes an array of fully filled out program-fitness structures and returns an array of program-fitness structures that
 	holds the next generation.  Structures that were the result of asexual reproduction will still have fitness calculated for them.
@@ -305,6 +347,8 @@
 	;; done
 	next-gen
 )
+
+;;; stuff for running the kernel
 (defun just-do-it (functions argmap terminals pop-size max-depth fit-func best-value generations)
 	"runs the whole thing for the specified number of generations and returns a list with the first element being the best of run result and the second element being the best of generation result"
 	(setq best-of-run nil)
@@ -332,6 +376,6 @@
 		;;create next gen
 		(setq gen (next-gen gen))
 	)
-	(setq gen (fit-and-sort gen fit-func best-value))
+;	(setq gen (fit-and-sort gen fit-func best-value))
 ;	(list best-of-run best-of-generation gen)
 )
