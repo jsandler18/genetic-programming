@@ -199,7 +199,18 @@
 	)
 
 )
-
+(defun get-tree-height (program)
+	"Gets the height of the given program. The height is the longest path from root to a leaf. does so recursively"
+	(if (atom program)
+		1 ;if the program is an atom, return 1 for the height of this tree
+		(let ((subtree-heights nil)) ;init a list that will hold the heights of all of the subtrees
+			(dolist (n program) ;iterate through the subtrees of this tree and recursively get their heights
+				(setq subtree-heights (cons (get-tree-height n) subtree-heights))
+			)
+			(+ 1 (apply #'max subtree-heights)) ;return the largest value of the subtree heights plus one for the root of this tree
+		)
+	)
+)
 (defun get-nth-subtree (program n)
 	"Gets the nth subtree of the given program returns program subtree. This is done in a breadth first way, so the whole program 
 	is n == 0, the program's first child is 1, second child is 2, etc."
@@ -377,7 +388,8 @@
 		)
 		;;create next gen
 		(setq gen (next-gen gen))
+		(print n)
 	)
 	(setq gen (fit-and-sort gen fit-func best-value))
-;	(list best-of-run best-of-generation gen)
+	(list best-of-run best-of-generation)
 )
