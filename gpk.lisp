@@ -10,19 +10,25 @@
 (defun grow (funcs funcargmap terms level size)
 	"creates a program tree using the grow method and recursive preorder traversal"
 	;pick a node randomly from set of functions and terminals
-	(setq funcsandterms (append funcs terms))
-	(setq node (random (length funcsandterms)))
 	(if (/= level size)
 		;if not at max size
 		(if (= 1 level)
 			;if at root, make a function
-			(CONS (NTH (mod node (length funcs)) funcs) (loop for x from 1 to (nth (mod node (length funcs)) funcargmap) collect (grow funcs funcargmap terms (+ level 1) size)))
+			(progn 
+				(setq rand-func (random (length funcs)))
+				(CONS (NTH rand-func funcs) (loop for x from 1 to (nth rand-func funcargmap) collect (grow funcs funcargmap terms (+ level 1) size)))
+
+			)
 			;if not at root, choose node from terminals and functions
-			(if (< node (length funcs))
+			(if (> (random 9) 3) ; 40% chance for terminal, 60% chance for operatpr
 				;if an operator, generate children 
-				(CONS (NTH node funcs) (loop for x from 1 to (nth node funcargmap) collect (grow funcs funcargmap terms (+ level 1) size)))
+				(progn 
+					(setq rand-func (random (length funcs)))
+					(CONS (NTH rand-func funcs) (loop for x from 1 to (nth rand-func funcargmap) collect (grow funcs funcargmap terms (+ level 1) size)))
+
+				)
 				;if a terminal, put terminal
-				(nth node funcsandterms)
+				(nth (random (length terms)) terms)
 			)
 		)
 		;if at amx size, make a termina
