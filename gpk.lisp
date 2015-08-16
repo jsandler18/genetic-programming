@@ -164,9 +164,10 @@
 	)
 	(aref programs idx)
 )
-(defun get-good-cross-point (program)
+(defun get-good-cross-point (program keep-short)
 	"function that takees a single program as an argument and finds a point for crossover to occur such that a leaf has 
-	a 10% chance of being chosen as the cross point and a non-leaf has a 90% chance."
+	a 10% chance of being chosen as the cross point and a non-leaf has a 90% chance. if keep-short is greater than 0, then
+	this function wont pick a cross point from all possibilities, but only those closer to the root of the tree"
 	(if (or (atom program) (= 1 (length program)))
 		(return-from get-good-cross-point 0)
 		nil
@@ -193,11 +194,15 @@
 		)
 		do (incf traversed 1)
 	)
-	(if (= 0 (random 9)) ; (random 9) == 0 is a 10% chance
-		(nth (random (length leaves)) leaves) ;pick random leaf (10%)
-		(nth (random (length non-leaves)) non-leaves) ;pick random non-leaf (90%)
-	)
 
+	(if (> 0 keep-short)
+		(random (ceiling (/ (length (append leaves non-leaves)) 6)));merge the leaves and non-leaves, find the max value (number of nodes), 
+										 ;eturn a point that is no larger that 1/3 of that (1/3 of the way through a breadth-first traversal) 
+		(if (= 0 (random 9)) ; (random 9) == 0 is a 10% chance
+			(nth (random (length leaves)) leaves) ;pick random leaf (10%)
+			(nth (random (length non-leaves)) non-leaves) ;pick random non-leaf (90%)
+		)
+	)
 )
 (defun get-tree-height (program)
 	"Gets the height of the given program. The height is the longest path from root to a leaf. does so recursively"
@@ -271,8 +276,10 @@
 	(setq p1-copy (copy-tree parent1))
 	(setq p2-copy (copy-tree parent2))	
 
-	(setq cross-point-1 (get-good-cross-point p1-copy))
-	(setq cross-point-2 (get-good-cross-point p2-copy))
+	(setq too-tall (- (+ (get-tree-height parent1) (get-tree-height parent2)) 20)) ;so is the height limit. if the heights are larger than 20, then too-tall will be positive, and get-cross will return a spot close to root
+	
+	(setq cross-point-1 (get-good-cross-point p1-copy too-tall))
+	(setq cross-point-2 (get-good-cross-point p2-copy too-tall))
 
 	(setq swap-1 (get-nth-subtree p1-copy cross-point-1))
 	(setq swap-2 (get-nth-subtree p2-copy cross-point-2))
