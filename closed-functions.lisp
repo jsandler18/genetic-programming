@@ -59,6 +59,10 @@
 	sum
 	
 )
+;;;functions for the artificial ant problem
+
+
+
 
 (defun artificial-ant-fit (program)
 	"Fitness functions for the artificial ant problem. works with programs that have terminals (move), (right), (left) "
