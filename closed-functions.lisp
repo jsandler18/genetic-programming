@@ -61,14 +61,9 @@
 )
 ;;;functions for the artificial ant problem
 
-
-
-
-(defun artificial-ant-fit (program)
-	"Fitness functions for the artificial ant problem. works with programs that have terminals (move), (right), (left) "
-	(setq board (make-array '(32 32);makes a 2d array of the example board from the book for the ant problem
+(setq board (make-array '(32 32);makes a 2d array of the example board from the book for the ant problem. ^,v,<,> represent the ant, facing up, down, left or right, respectively
 				:initial-contents
-				'((0 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+				'((">" 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 				  (0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 				  (0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 0 0 0)
 				  (0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0)
@@ -101,5 +96,82 @@
 				  (0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 				  (0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 				 )))
+;;set up x and y coords for the ant
+(setq x 0)
+(setq y 0)
+(setq eaten 0)
+
+
+(defun move () 
+	"terminal function moves the and forward 1 place on the board, leaving an empty cell behind. will not move if hits a wall.
+	depends on  the global variables board, x and y being defined already"
+	;;get direction
+	(setq dir (aref board x y))
+	;check if going out of bounds, else move in the specified direction
+	(if (equal dir ">") 
+		(if (= (nth 0 (array-dimensions board)) (+ 1 y)) 
+			nil
+			(progn 
+				(setf (aref board x y) 0) 
+				(incf y 1)
+				(if (= 1 (aref board x y))
+					(incf eaten 1)
+					nil
+				)
+				(setf (aref board x y) ">")
+			) ;leave prev cell empty, move
+		)
+		nil
+	)
+	(if (equal dir "<") 
+		(if (= 0 y) 
+			nil
+			(progn 
+				(setf (aref board x y) 0) 
+				(decf y 1)
+				(if (= 1 (aref board x y))
+					(incf eaten 1)
+					nil
+				)
+				(setf (aref board x y) "<")
+			) ;leave prev cell empty, move
+		)
+		nil
+	)
+	(if (equal dir "v") 
+		(if (= (nth 1 (array-dimensions board)) (+ 1 x)) 
+			nil
+			(progn 
+				(setf (aref board x y) 0) 
+				(incf x 1) 
+				(if (= 1 (aref board x y))
+					(incf eaten 1)
+					nil
+				)
+				(setf (aref board x y) "v")
+			) ;leave prev cell empty, move
+		)
+		nil
+	)
+	(if (equal dir "^") 
+		(if (= 0 x) 
+			nil
+			(progn 
+				(setf (aref board x y) 0) 
+				(decf x 1) 
+				(if (= 1 (aref board x y))
+					(incf eaten 1)
+					nil
+				)
+				(setf (aref board x y) "^")) ;leave prev cell empty, move
+		)
+		nil
+	)
+)
+
+(defun artificial-ant-fit (program)
+	"Fitness functions for the artificial ant problem. works with programs that have terminals (move), (right), (left) "
+	
+	
 
 )
