@@ -60,15 +60,15 @@
   "calculates standard fitness, closer to zero is better. bestvalue is the best possible score the 
   fitness function can give.  If lower scores are better, use 0. if the highest score is unknown, 
   use an arbitrarily high value"
-  (into [] (map #(assoc % :std (abs (- bestValue (get % :rawProg))) rawProgs))))
+  (into [] (map #(assoc % :standardized (Math/abs (- bestValue (get % :raw)))) programs)))
 
 (defn adjusted-fitness [programs]
   "fills in the adjusted fitness of programs. adjusted fitness is 1/(1+standard)"
-  (into [] (map #(assoc % :adjusted (/ 1 (+ 1 (get % standard)))) programs)))
+  (into [] (map #(assoc % :adjusted (/ 1 (+ 1 (get % :standardized)))) programs)))
 
 (defn normalized-fitness [programs]
   "fills in the normalized fitness of programs.  normalized fitness = adjusted/(sum of all adjusted)"
-  (let [sum (fold + (map #(get % :adjusted) programs))]
+  (let [sum (reduce + 0 (map #(get % :adjusted) programs))]
     (into [] (map #(assoc % :normalized (/ (get % :adjusted) sum))) programs)))
 
 
@@ -77,6 +77,5 @@
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
         (let [funs (gen-zero functions function-args terminals 50 6)]
-          (prn funs)
-          (prn (raw-fitnes funs #(Fitness/fitness %))))))
+          (prn (normalized-fitness (adjusted-fitness (stdfitness (raw-fitnes funs #(Fitness/fitness %)) 117)))))))
 
