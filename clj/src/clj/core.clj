@@ -1,5 +1,6 @@
 (ns clj.core
-  (:gen-class))
+  (:gen-class
+   :name Core ))
 
 
 (defn full [functions function-args terminals level maxlevels]
@@ -45,11 +46,11 @@
             inner-list)) program-list))) ;concat the list of programs generated for that size with the rest of the generated programs
         program-list)))) 
 
-(defrecord Program-fitness [program raw standardized adjusted normalized])
+(defrecord ProgramFitness [program raw standardized adjusted normalized])
 
 (defn gen-zero [functions function-args terminals population-size max-tree-size]
   "creates a vector of program-fitness structures and fills the program field with programs generated from rhah"
-  (into [] (map #(Program-fitness. % nil nil nil nil) (rhah functions function-args terminals population-size max-tree-size) ))) 
+  (into [] (map #(ProgramFitness. % nil nil nil nil) (rhah functions function-args terminals population-size max-tree-size) ))) 
 
 
 
@@ -58,5 +59,6 @@
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
         (let [funs (gen-zero functions function-args terminals 50 6)]
-          (prn funs))))
+          (prn funs)
+          (prn (Fitness/fitness (get (first funs) :program))))))
 
