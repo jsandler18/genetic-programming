@@ -56,8 +56,11 @@
   "evaluates the raw fitness of each program using the fitness function"
   (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
 
-
-;TODO standard fitness
+(defn stdfitness [programs bestValue]
+  "calculates standard fitness, closer to zero is better. bestvalue is the best possible score the 
+  fitness function can give.  If lower scores are better, use 0. if the highest score is unknown, 
+  use an arbitrarily high value"
+  (into [] (map #(assoc % :std (abs (- bestValue (get % :rawProg))) rawProgs))))
 
 (defn adjusted-fitness [programs]
   "fills in the adjusted fitness of programs. adjusted fitness is 1/(1+standard)"
