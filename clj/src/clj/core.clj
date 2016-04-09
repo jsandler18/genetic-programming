@@ -71,11 +71,14 @@
   (let [sum (reduce + 0 (map #(get % :adjusted) programs))]
     (into [] (map #(assoc % :normalized (/ (get % :adjusted) sum))) programs)))
 
+(defn run-fitness [programs fitness-function best-value]
+  (let [fitnesses (sort-by :normalized > (normalized-fitness (adjusted-fitness (stdfitness (raw-fitnes programs fitness-function) best-value))))] fitnesses)) ;run all fitness functions and sort them
+
 
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
         (let [funs (gen-zero functions function-args terminals 50 6)]
-          (prn (normalized-fitness (adjusted-fitness (stdfitness (raw-fitnes funs #(Fitness/fitness %)) 117)))))))
+          (prn (run-fitness funs #(Fitness/fitness %) 117)))))
 
