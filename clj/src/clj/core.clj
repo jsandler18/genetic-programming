@@ -77,11 +77,30 @@
 (defn pick-individual [progs]
   "picks a random individual from the program list"
   (let [random (rand 1.0)]
-      (nth progs (loop [i 0 rnd (- random (get (first progs) :normalized))]
-        (if (>= rnd 0)
-          (recur (+ i 1) (- rnd (get (nth progs (+ i 1)) :normalized)))
-          i)
-        ))))
+    (nth progs (loop [i 0 rnd (- random (get (first progs) :normalized))]
+      (if (>= rnd 0)
+        (recur (+ i 1) (- rnd (get (nth progs (+ i 1)) :normalized)))
+        i)))))
+      
+(defn height [tree]
+  "returns the height of the tree at its deepest"
+  (if-let [sub-trees (seq (filter coll? tree))]
+    (inc (apply max (map height sub-trees)))
+    1))
+
+(defn get-cross-point [program]
+  ;TODO write this
+  1)
+
+(defn set-nth-subtree [program]
+  ;TODO write this
+  '(+ 1 1))
+
+(defn crossover [parent1 parent2]
+  "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a list of 2 elements"
+  (let [too-tall (- (+ (height parent1) (height parent2)) 20)];if the sum of the heights are above 20, too-tall wil be > 0, and get-rand will make it more likely to pick from the top
+    (let [cross1 (get-cross-point parent1) cross2 (get-cross-point parent2)]
+      ((set-nth-subtree (first cross2) parent1 (first (rest cross2))) (set-nth-subtree (first cross1) parent2 (first (rest (cross1))))))))
       
 (defn -main
 "I don't do a whole lot ... yet."
