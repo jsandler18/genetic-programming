@@ -54,31 +54,34 @@
 (defn raw-fitness [programs fitness-function] 
 "evaluates the raw fitness of each program using the fitness function"
   (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
-  
-(defn standard-fitness [programs bestValue]
-"calculates standard fitness, closer to zero is better. bestvalue is the best possible score the 
+
+(defn stdfitness [programs bestValue]
+  "calculates standard fitness, closer to zero is better. bestvalue is the best possible score the 
   fitness function can give.  If lower scores are better, use 0. if the highest score is unknown, 
   use an arbitrarily high value"
-  (into [] (map #(assoc % :std (abs (- bestValue (get % :program))) programs))))
-  
+  (into [] (map #(assoc % :standardized (Math/abs (- bestValue (get % :raw)))) programs)))
+
 (defn adjusted-fitness [programs]
-"fills in the adjusted fitness of programs. adjusted fitness is 1/(1+standard)"
-  (into [] (map #(assoc % :adjusted (/ 1 (+ 1 (get % standard)))) programs)))
-  
+  "fills in the adjusted fitness of programs. adjusted fitness is 1/(1+standard)"
+  (into [] (map #(assoc % :adjusted (/ 1 (+ 1 (get % :standardized)))) programs)))
+
 (defn normalized-fitness [programs]
-"fills in the normalized fitness of programs.  normalized fitness = adjusted/(sum of all adjusted)"
-  (let [sum (fold + (map #(get % :adjusted) programs))]
+  "fills in the normalized fitness of programs.  normalized fitness = adjusted/(sum of all adjusted)"
+  (let [sum (reduce + 0 (map #(get % :adjusted) programs))]
     (into [] (map #(assoc % :normalized (/ (get % :adjusted) sum))) programs)))
-    
+
+(defn run-fitness [programs fitness-function best-value]
+  "Runs all fitness calculations and sorts them"
+  (let [fitnesses (sort-by :normalized > (normalized-fitness (adjusted-fitness (stdfitness (raw-fitness programs fitness-function) best-value))))] fitnesses)) ;run all fitness functions and sort them
+
 (defn pick-individual [progs]
-  (let [rnd (rand 1.0)]
-    (let [idx (get progs 0)]
-      (loop [i rnd]
-        (when (>= i 0)
-          (dec idx)
-          (recur (- i (program-fitness-nrm (get progs idx)))))
-        )
-      (get progs idx))))
+  "picks a random individual from the program list"
+  (let [random (rand 1.0)]
+      (nth progs (loop [i 0 rnd (- random (get (first progs) :normalized))]
+        (if (>= rnd 0)
+          (recur (+ i 1) (- rnd (get (nth progs (+ i 1)) :normalized)))
+          i)
+        ))))
       
 (defn crossover [parent1 parent2]
   (let [p1-copy (copy-tree parent1))
