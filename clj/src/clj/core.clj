@@ -57,6 +57,16 @@
   (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
 
 
+;TODO standard fitness
+
+(defn adjusted-fitness [programs]
+  "fills in the adjusted fitness of programs. adjusted fitness is 1/(1+standard)"
+  (into [] (map #(assoc % :adjusted (/ 1 (+ 1 (get % standard)))) programs)))
+
+(defn normalized-fitness [programs]
+  "fills in the normalized fitness of programs.  normalized fitness = adjusted/(sum of all adjusted)"
+  (let [sum (fold + (map #(get % :adjusted) programs))]
+    (into [] (map #(assoc % :normalized (/ (get % :adjusted) sum))) programs)))
 
 
 (defn -main
