@@ -56,7 +56,8 @@
   "evaluates the raw fitness of each program using the fitness function"
   (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
 
-
+(defn stdfitness [rawProgs bestValue]
+  (into [] (map #(assoc % :std (abs (- bestValue (get % :rawProg))) rawProgs))))
 
 
 (defn -main
