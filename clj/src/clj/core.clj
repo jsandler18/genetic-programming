@@ -52,6 +52,11 @@
   "creates a vector of program-fitness structures and fills the program field with programs generated from rhah"
   (into [] (map #(ProgramFitness. % nil nil nil nil) (rhah functions function-args terminals population-size max-tree-size) ))) 
 
+(defn raw-fitnes [programs fitness-function] 
+  "evaluates the raw fitness of each program using the fitness function"
+  (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
+
+
 
 
 (defn -main
@@ -60,5 +65,5 @@
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
         (let [funs (gen-zero functions function-args terminals 50 6)]
           (prn funs)
-          (prn (Fitness/fitness (get (first funs) :program))))))
+          (prn (raw-fitnes funs #(Fitness/fitness %))))))
 
