@@ -20,8 +20,8 @@
   "Creates a programm tree by 'growing it' from the root and has randomness to the breadth and depth"
   ;if anot at bottom, grow
   (if (not= level maxlevels)
-    ;if the root level or if a random int is above 2 (70% chance), must be a function
-    (if (or (= level 1) (> (rand-int 9) 2))
+    ;if the root level or if a random int is above 1 (80% chance), must be a function
+    (if (or (= level 1) (> (rand-int 9) 1))
       (let [rnd-func-idx (rand-int (count functions))]
         ;preappend the chosen function to the arguemnt list
         (cons (nth functions rnd-func-idx) (loop [args 0 arg-count (nth function-args rnd-func-idx) arg-list '()]
@@ -32,7 +32,18 @@
       (nth terminals (rand-int (count terminals))))
     (nth terminals (rand-int (count terminals)))))
 
-
+(defn rhah [functions function-args terminals population-size max-tree-size]
+  "creates an initial generation using 'ramped half and half'.  Ramped refers to how it starts with small trees and increases the tree sizes and half and half refers to using grow and full equally"
+  (let [programs-per-size (/ population-size (- max-tree-size 1))] ;divide populationsize by number of possible sizes for number of programs of that size per tree
+    (loop [size 2 program-list '[]] ;loop while size is less than max
+      (if (<= size max-tree-size)
+        (recur (+ size 1) (into [] (concat (loop [num-this-size 1 inner-list program-list] ;loop for (pop-size/max-tree-size) percent of the total population
+          (if (<= num-this-size programs-per-size)
+            (recur (+ num-this-size 1) (cons (if (= (mod num-this-size 2) 0) ;preappend either a grow or a full tree to the list of programs
+              (grow functions function-args terminals 1 size)
+              (full functions function-args terminals 1 size)) inner-list))
+            inner-list)) program-list))) ;concat the list of programs generated for that size with the rest of the generated programs
+        program-list)))) 
 
 
 
@@ -40,7 +51,6 @@
   "I don't do a whole lot ... yet."
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
-        (let [fun (grow functions function-args terminals 1 6)]
-          (prn fun)
-          (prn (eval fun)))))
+        (let [funs (rhah functions function-args terminals 50 6)]
+          (prn funs))))
 
