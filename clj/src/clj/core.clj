@@ -80,6 +80,18 @@
         )
       (get progs idx))))
       
+(defn crossover [parent1 parent2]
+  (let [p1-copy (copy-tree parent1))
+    (let [p2-copy (copy-tree parent)]
+      (let [too-tall (- (+ (get-tree-height parent1) (get-tree-height parent2)) 20)]
+        (let [cross-point-1 (get-good-cross-point p1-copy too-tall)] 
+          (let [cross-point-2 (get-good-cross-point p2-copy too-tall)]
+            (let [swap-1 (get-nth-subtree p1-copy cross-point-1)]
+              (let [swap-2 (get-nth-subtree p2-copy cross-point-2)]
+                (let [p1-copy (set-nth-subtree p1-copy cross-point-1 swap-2)]
+                  (let [p2-copy (set-nth-subtree p2-copy cross-point-2 swap-1)]
+                    (list p1-copy p2-copy))))))))))
+      
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
