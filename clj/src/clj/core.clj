@@ -155,8 +155,31 @@
       %)) program)))
       
 
-(defn -mydef [x y]
-  (def x y))
+(defn just-do-it [funs argmap terminals pop-size max-depth fit-func best-value gens]
+  (let [gen (gen-zero funs argmap terminals pop-size max-depth)]
+    (dotimes [n generations]
+      (let [gen (run-fitness gen fit-func best-value)]
+        (let [best-of-gen (get gen (- pop-size 1))]
+          (if (= 0 n) 
+            (let [best-of-run best-of-gen])
+            (if (< (ProgramFitness.standardized best-of-run) (ProgramFitness.standardized best-of-gen))
+              (let [best-of-run best-of-gen])
+              nil
+            )
+          )
+          
+          (if (= best-value (ProgramFitness-raw best-of-run))
+            (list best-of-run best-of-gen)
+            nil
+          )
+          
+          (let [gen (next-gen gen)]
+            (print n)
+    ))))
+    (let [gen (run-fitness gen fit-func-best-value)]
+      (list best-of-run best-of-gen)
+      
+)))
 
 (defn -main
 "I don't do a whole lot ... yet."
