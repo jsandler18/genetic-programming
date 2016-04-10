@@ -4,29 +4,29 @@
 
 (defn full [functions function-args terminals level maxlevels]
 "Creates a program tree that is a full tree (all terminal leaves are on the same level)."
-;gets a random index in the function vector
+  ;gets a random index in the function vector
   (let [rnd-func-idx (rand-int (count functions))]
     (if (not= level maxlevels)
-;preappend the randomly picked function to a list of arguments
+    ;preappend the randomly picked function to a list of arguments
       (cons (nth functions rnd-func-idx) (loop [args 0 arg-count (nth function-args rnd-func-idx) arg-list '()] 
         (if (not= args arg-count)
-;make a full tree of one level smaller and preappend that to the argument list
+        ;make a full tree of one level smaller and preappend that to the argument list
           (recur (+ 1 args) arg-count (cons (full functions function-args terminals (+ 1 level) maxlevels) arg-list))
            arg-list)))
-;return one of the terminals at the bottom level
+      ;return one of the terminals at the bottom level
       (nth terminals (rand-int (count terminals))))))
       
 (defn grow [functions function-args terminals level maxlevels]
 "Creates a programm tree by 'growing it' from the root and has randomness to the breadth and depth"
-;if anot at bottom, grow
+  ;if anot at bottom, grow
   (if (not= level maxlevels)
-;if the root level or if a random int is above 1 (80% chance), must be a function
+    ;if the root level or if a random int is above 1 (80% chance), must be a function
     (if (or (= level 1) (> (rand-int 9) 1))
       (let [rnd-func-idx (rand-int (count functions))]
-;preappend the chosen function to the arguemnt list
+        ;preappend the chosen function to the arguemnt list
         (cons (nth functions rnd-func-idx) (loop [args 0 arg-count (nth function-args rnd-func-idx) arg-list '()]
           (if (not= args arg-count)
-;generate the argument list by recurively calling grow
+            ;generate the argument list by recurively calling grow
             (recur (+ 1 args) arg-count (cons (grow functions function-args terminals (+ 1 level) maxlevels) arg-list))
             arg-list))))
       (nth terminals (rand-int (count terminals))))
