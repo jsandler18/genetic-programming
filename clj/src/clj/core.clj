@@ -87,7 +87,15 @@
   (if-let [sub-trees (seq (filter coll? tree))]
     (inc (apply max (map height sub-trees)))
     1))
-
+  
+(defn addListToQueue [lst q]
+  (if (= (type lst) (type '())) q
+    (do
+      ;(let [q2 clojure.lang.PersistentQueue/EMPTY])
+      (def q2 (conj q (first lst)))
+      (addListToQueue (rest lst) q2))
+  )
+)
 (defn get-cross-point [lst]
  (let [queue2 clojure.lang.PersistentQueue/EMPTY]
    (do
