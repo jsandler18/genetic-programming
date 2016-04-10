@@ -1,9 +1,9 @@
 import clojure.java.api.Clojure;
-import clojure.lang.IFn;
+import clojure.lang.*;
 
 public class Fitness {
-    public static Object fitness(Object program){
-        IFn eval = Clojure.var("clojure.core", "eval");
-        return eval.invoke(program);
+    public static Object fitness(String program){
+        new RT();
+        return clojure.lang.Compiler.load(new java.io.StringReader("(do (def x 100) (eval " + program + " ))"));
     }
 }

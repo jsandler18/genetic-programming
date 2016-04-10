@@ -53,7 +53,7 @@
   
 (defn raw-fitness [programs fitness-function] 
 "evaluates the raw fitness of each program using the fitness function"
-  (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
+  (into [] (map #(assoc % :raw (fitness-function (str (get % :program)))) programs)))
 
 (defn stdfitness [programs bestValue]
   "calculates standard fitness, closer to zero is better. bestvalue is the best possible score the 
@@ -154,10 +154,14 @@
       (mutate %)
       %)) program)))
       
+
+(defn -mydef [x y]
+  (def x y))
+
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
-  (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
+  (let [functions '[+ - *] function-args '[2 2 2] terminals '[x 1 2 3 4 5 6 7 8 9]]
         (let [funs (gen-zero functions function-args terminals 50 6)]
           (prn (pick-individual (run-fitness funs #(Fitness/fitness %) 117))))))
 
