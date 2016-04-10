@@ -88,9 +88,37 @@
     (inc (apply max (map height sub-trees)))
     1))
 
-(defn get-cross-point [program]
-  ;TODO write this
-  1)
+(defn get-cross-point [lst]
+ (let [queue2 clojure.lang.PersistentQueue/EMPTY]
+   (do
+     (def winner lst)
+     (def n 2)
+     (def queue (addListToQueue (rest lst) queue2 ))
+    (while (not (empty? queue))
+      (do
+        (def head (peek queue))
+        (if (= (type head) (type '(1))) 
+          (do
+           (def resthead (rest head))
+           (def queue (addListToQueue resthead queue))
+           (if (< (rand(- (* 10 n) 1)) 9)
+             (def winner head)
+             )
+           )
+          (do
+            (if (< (rand (- (* 10 n) 1)) 1)
+            (def winner head)
+            )
+          )
+        )
+        (def queue (pop queue))
+        (def n (inc n))
+       )
+     )
+    winner
+  )
+ )
+)
 
 (defn set-subtree [new-subtree old-subtree program]
   "takes a program and two subtrees. one of them is what you are replacing and one is what you are replacing with"
