@@ -4,29 +4,29 @@
 
 (defn full [functions function-args terminals level maxlevels]
 "Creates a program tree that is a full tree (all terminal leaves are on the same level)."
-;gets a random index in the function vector
+  ;gets a random index in the function vector
   (let [rnd-func-idx (rand-int (count functions))]
     (if (not= level maxlevels)
-;preappend the randomly picked function to a list of arguments
+    ;preappend the randomly picked function to a list of arguments
       (cons (nth functions rnd-func-idx) (loop [args 0 arg-count (nth function-args rnd-func-idx) arg-list '()] 
         (if (not= args arg-count)
-;make a full tree of one level smaller and preappend that to the argument list
+        ;make a full tree of one level smaller and preappend that to the argument list
           (recur (+ 1 args) arg-count (cons (full functions function-args terminals (+ 1 level) maxlevels) arg-list))
            arg-list)))
-;return one of the terminals at the bottom level
+      ;return one of the terminals at the bottom level
       (nth terminals (rand-int (count terminals))))))
       
 (defn grow [functions function-args terminals level maxlevels]
 "Creates a programm tree by 'growing it' from the root and has randomness to the breadth and depth"
-;if anot at bottom, grow
+  ;if anot at bottom, grow
   (if (not= level maxlevels)
-;if the root level or if a random int is above 1 (80% chance), must be a function
+    ;if the root level or if a random int is above 1 (80% chance), must be a function
     (if (or (= level 1) (> (rand-int 9) 1))
       (let [rnd-func-idx (rand-int (count functions))]
-;preappend the chosen function to the arguemnt list
+        ;preappend the chosen function to the arguemnt list
         (cons (nth functions rnd-func-idx) (loop [args 0 arg-count (nth function-args rnd-func-idx) arg-list '()]
           (if (not= args arg-count)
-;generate the argument list by recurively calling grow
+            ;generate the argument list by recurively calling grow
             (recur (+ 1 args) arg-count (cons (grow functions function-args terminals (+ 1 level) maxlevels) arg-list))
             arg-list))))
       (nth terminals (rand-int (count terminals))))
@@ -77,29 +77,113 @@
 (defn pick-individual [progs]
   "picks a random individual from the program list"
   (let [random (rand 1.0)]
-      (nth progs (loop [i 0 rnd (- random (get (first progs) :normalized))]
-        (if (>= rnd 0)
-          (recur (+ i 1) (- rnd (get (nth progs (+ i 1)) :normalized)))
-          i)
-        ))))
+    (nth progs (loop [i 0 rnd (- random (get (first progs) :normalized))]
+      (if (>= rnd 0)
+        (recur (+ i 1) (- rnd (get (nth progs (+ i 1)) :normalized)))
+        i)))))
       
+(defn height [tree]
+  "returns the height of the tree at its deepest"
+  (if-let [sub-trees (seq (filter coll? tree))]
+    (inc (apply max (map height sub-trees)))
+    1))
+  
+(defn addListToQueue [lst q]
+  (if (= (type lst) (type '())) q
+    (do
+      ;(let [q2 clojure.lang.PersistentQueue/EMPTY])
+      (def q2 (conj q (first lst)))
+      (addListToQueue (rest lst) q2))
+  )
+)
+
+(defn get-cross-point [lst keep-short]
+ (let [queue2 clojure.lang.PersistentQueue/EMPTY]
+   (do
+     (def winner lst)
+     (def n 2)
+     (def queue (addListToQueue (rest lst) queue2 ))
+    (while (not (empty? queue))
+      (do
+        (def head (peek queue))
+        (if (= (type head) (type '(1))) 
+          (do
+           (def resthead (rest head))
+           (def queue (addListToQueue resthead queue))
+           (if (< (rand(- (* (* 10 n) keep-short) 1)) 9)
+             (def winner head)
+             )
+           )
+          (do
+            (if (< (rand (- (* (* 10 n) keep-short) 1)) 1)
+            (def winner head)
+            )
+          )
+        )
+        (def queue (pop queue))
+        (def n (inc n))
+       )
+     )
+    winner
+  )
+ )
+)
+
+(defn set-subtree [new-subtree old-subtree program]
+  "takes a program and two subtrees. one of them is what you are replacing and one is what you are replacing with"
+  (map #(if (= % old-subtree)
+    new-subtree
+    (if (seq? %)
+      (set-subtree new-subtree old-subtree %)
+      %)) program))
+
 (defn crossover [parent1 parent2]
-  (let [p1-copy (copy-tree parent1))
-    (let [p2-copy (copy-tree parent)]
-      (let [too-tall (- (+ (get-tree-height parent1) (get-tree-height parent2)) 20)]
-        (let [cross-point-1 (get-good-cross-point p1-copy too-tall)] 
-          (let [cross-point-2 (get-good-cross-point p2-copy too-tall)]
-            (let [swap-1 (get-nth-subtree p1-copy cross-point-1)]
-              (let [swap-2 (get-nth-subtree p2-copy cross-point-2)]
-                (let [p1-copy (set-nth-subtree p1-copy cross-point-1 swap-2)]
-                  (let [p2-copy (set-nth-subtree p2-copy cross-point-2 swap-1)]
-                    (list p1-copy p2-copy))))))))))
+  "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a list of 2 elements"
+  (let [too-tall (- (+ (height parent1) (height parent2)) 20)];if the sum of the heights are above 20, too-tall wil be > 0, and get-rand will make it more likely to pick from the top
+    (let [cross1 (get-cross-point parent1 too-tall) cross2 (get-cross-point parent2 too-tall)]
+      ((set-subtree cross2 cross1 parent1)) (set-subtree cross1 cross2 parent2))))
+
+(defn mutate [program functions function-args terminals]
+  "does a point mutation on the parent"
+  (let [mutate-subtree (get-cross-point program) mutate-size (+ (rand-int 8) 1)]
+    (map #(if (= % mutate-subtree)
+    (if (= (rand-int 1) 0)
+      (full functions function-args terminals 1 mutate-size)
+      (grow functions function-args terminals 1 mutate-size))
+    (if (seq? %)
+      (mutate %)
+      %)) program)))
       
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
         (let [funs (gen-zero functions function-args terminals 50 6)]
-          (prn funs)
-          (prn (raw-fitnes funs #(Fitness/fitness %))))))
+          (prn (pick-individual (run-fitness funs #(Fitness/fitness %) 117))))))
 
+
+(defn just-do-it [funs argmap terminals pop-size max-depth fit-func best-value gens]
+  (let [gen (gen-zero funs argmap terminals pop-size max-depth)]
+    (dotimes [n generations]
+      (let [gen (run-fitness gen fit-func best-value)]
+        (let [best-of-gen (get gen (- pop-size 1))]
+          (if (= 0 n) 
+            (let [best-of-run best-of-gen])
+            (if (< (ProgramFitness.standardized best-of-run) (ProgramFitness.standardized best-of-gen))
+              (let [best-of-run best-of-gen])
+              nil
+            )
+          )
+          
+          (if (= best-value (ProgramFitness-raw best-of-run))
+            (list best-of-run best-of-gen)
+            nil
+          )
+          
+          (let [gen (next-gen gen)]
+            (print n)
+    ))))
+    (let [gen (run-fitness gen fit-func-best-value)]
+      (list best-of-run best-of-gen)
+      
+)))
