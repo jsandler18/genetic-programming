@@ -53,7 +53,7 @@
   
 (defn raw-fitness [programs fitness-function] 
 "evaluates the raw fitness of each program using the fitness function"
-  (into [] (map #(assoc % :raw (fitness-function (str (get % :program)))) programs)))
+  (into [] (map #(assoc % :raw (fitness-function (get % :program))) programs)))
 
 (defn stdfitness [programs bestValue]
   "calculates standard fitness, closer to zero is better. bestvalue is the best possible score the 
@@ -88,22 +88,14 @@
     (inc (apply max (map height sub-trees)))
     1))
   
-(defn addListToQueue [lst q]
-  (if (= (type lst) (type '())) q
-    (do
-      ;(let [q2 clojure.lang.PersistentQueue/EMPTY])
-      (def q2 (conj q (first lst)))
-      (addListToQueue (rest lst) q2))
-  )
-)
 
 (defn get-cross-point [lst keep-short]
  (let [queue2 clojure.lang.PersistentQueue/EMPTY]
-   (do
+  (do
      (def winner lst)
      (def n 2)
      (def queue (addListToQueue (rest lst) queue2 ))
-    (while (not (empty? queue))
+     (while (not (empty? queue))
       (do
         (def head (peek queue))
         (if (= (type head) (type '(1))) 
@@ -111,22 +103,15 @@
            (def resthead (rest head))
            (def queue (addListToQueue resthead queue))
            (if (< (rand(- (* (* 10 n) keep-short) 1)) 9)
-             (def winner head)
-             )
-           )
+            (def winner head)))
           (do
             (if (< (rand (- (* (* 10 n) keep-short) 1)) 1)
-            (def winner head)
-            )
-          )
-        )
+              (def winner head))))
         (def queue (pop queue))
-        (def n (inc n))
-       )
-     )
-    winner
+        (def n (inc n))))
+      winner
+    )
   )
- )
 )
 
 (defn set-subtree [new-subtree old-subtree program]
@@ -141,7 +126,7 @@
   "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a vector of 2 elements"
   (let [too-tall (- (+ (height parent1) (height parent2)) 20)];if the sum of the heights are above 20, too-tall wil be > 0, and get-rand will make it more likely to pick from the top
     (let [cross1 (get-cross-point parent1 too-tall) cross2 (get-cross-point parent2 too-tall)]
-      [(set-subtree cross2 cross1 parent1)) (set-subtree cross1 cross2 parent2)]))
+      [(set-subtree cross2 cross1 parent1) (set-subtree cross1 cross2 parent2)])))
 
 (defn mutate [program functions function-args terminals]
   "does a point mutation on the parent"
@@ -154,48 +139,24 @@
       (mutate %)
       %)) program)))
     
-(defn nextGen [parents]
-  (do
-    (def toRet [])
-    (def n 0)
-    (def reproduction-times (Math/ceil (* (count parents) .1)))
-    (def crossover-times (Math/floor (* (count parents) .9)))
-    (if (not= (mod crossover-times 2))
-      (do
-        (def reproduction-times (inc reproduction-times))
-        (def crossover-times (dec crossover-times))
-       )
-     )
-    (while (< n reproduction-times)
-      (do
-        (conj toRet (pick-individual parents))
-        (def n (inc n))
-      )
-    )
-    (def n 0)
-    (while (< n crossover-times)
-      (do
-        (let 
-          [parent1 (program-fitness-prog (pick-individual parents))
-           parent2 (program-fitness-prog (pick-individual parents))
-           ]
-          (do
-            (def crossed (crossover parent1 parent2))
-            (conj toRet (ProgramFitness. (crossed 0) nil nil nil nil))
-            (def n (inc n))
-            (conj toRet (ProgramFitness. (crossed 1) nil nil nil nil))
-            (def n (inc n))
-           )
-          )
-        )
-      )
-    toRet
-   )
-)
+(defn nextGen [programs]
+  (let [crossover-times (Math/floor (* (count programs) 0.9)) total (count programs)];90% of time crossover, else replicate
+    (loop [n 0 lst []]
+      (if (< n total) 
+        (if (< n crossover-times)
+          (let [p1 (get (pick-individual programs) :program) p2 (get (pick-individual programs) :program)]
+            (let [crossed (crossover p1 p2)]
+            (recur (+ n 2) (concat lst [(ProgramFitness. (first crossed) nil nil nil nil) (ProgramFitness. (first (rest crossed)) nil nil nil nil)]))))
+          (recur (+ n 1) (cons (pick-individual programs) lst)))
+        (into [] lst)))))
+
+
+
       
 
 (defn just-do-it [funs argmap terminals pop-size max-depth fit-func best-value gens]
   (prn (loop [gen (gen-zero funs argmap terminals pop-size max-depth) best-of-run nil  gens-completed 0]
+    (prn (map #(get % :program) gen))
     (if (< gens-completed gens)
       (let [gen (run-fitness gen fit-func best-value)]
         (let [best-of-gen (first gen)]
@@ -203,13 +164,13 @@
                  best-of-gen
                  (recur (nextGen gen) (if (= gens-completed 0)
                                              best-of-gen
-                                             (if (< (get best-of-run :standardized) (get best-of-gen :standardized)
+                                             (if (< (get best-of-run :standardized) (get best-of-gen :standardized))
                                                     best-of-gen
-                                                    best-of-run))) (+ gens-completed 1))))))))))
+                                                    best-of-run)) (+ gens-completed 1)))))))))
 
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
-  (let [functions '[+ - *] function-args '[2 2 2] terminals '[x 1 2 3 4 5 6 7 8 9]]
-    (just-do-it functions function-args terminals 50 6 #(Fitness/fitness %) 200)
+  (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
+    (just-do-it functions function-args terminals 50 6 #(eval %) 117 200)))
 
