@@ -156,35 +156,21 @@
       
 
 (defn just-do-it [funs argmap terminals pop-size max-depth fit-func best-value gens]
-  (let [gen (gen-zero funs argmap terminals pop-size max-depth)]
-    (dotimes [n generations]
+  (prn (loop [gen (gen-zero funs argmap terminals pop-size max-depth) best-of-run nil  gens-completed 0]
+    (if (< gens-completed gens)
       (let [gen (run-fitness gen fit-func best-value)]
-        (let [best-of-gen (get gen (- pop-size 1))]
-          (if (= 0 n) 
-            (let [best-of-run best-of-gen])
-            (if (< (ProgramFitness.standardized best-of-run) (ProgramFitness.standardized best-of-gen))
-              (let [best-of-run best-of-gen])
-              nil
-            )
-          )
-          
-          (if (= best-value (ProgramFitness-raw best-of-run))
-            (list best-of-run best-of-gen)
-            nil
-          )
-          
-          (let [gen (next-gen gen)]
-            (print n)
-    ))))
-    (let [gen (run-fitness gen fit-func-best-value)]
-      (list best-of-run best-of-gen)
-      
-)))
+        (let [best-of-gen (first gen)]
+          (if (= best-value (get best-of-gen :raw))
+                 best-of-gen
+                 (recur (nextGen gen) (if (= gens-completed 0)
+                                             best-of-gen
+                                             (if (< (get best-of-run :standardized) (get best-of-gen :standardized)
+                                                    best-of-gen
+                                                    best-of-run))) (+ gens-completed 1))))))))))
 
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[x 1 2 3 4 5 6 7 8 9]]
-        (let [funs (gen-zero functions function-args terminals 50 6)]
-          (prn (pick-individual (run-fitness funs #(Fitness/fitness %) 117))))))
+    (just-do-it functions function-args terminals 50 6 #(Fitness/fitness %) 200)
 
