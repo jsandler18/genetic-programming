@@ -138,10 +138,10 @@
       %)) program))
 
 (defn crossover [parent1 parent2]
-  "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a list of 2 elements"
+  "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a vector of 2 elements"
   (let [too-tall (- (+ (height parent1) (height parent2)) 20)];if the sum of the heights are above 20, too-tall wil be > 0, and get-rand will make it more likely to pick from the top
     (let [cross1 (get-cross-point parent1 too-tall) cross2 (get-cross-point parent2 too-tall)]
-      ((set-subtree cross2 cross1 parent1)) (set-subtree cross1 cross2 parent2))))
+      [(set-subtree cross2 cross1 parent1)) (set-subtree cross1 cross2 parent2)]))
 
 (defn mutate [program functions function-args terminals]
   "does a point mutation on the parent"
