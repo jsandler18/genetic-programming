@@ -90,29 +90,14 @@
   
 
 (defn get-cross-point [lst keep-short]
- (let [queue2 clojure.lang.PersistentQueue/EMPTY]
-  (do
-     (def winner lst)
-     (def n 2)
-     (def queue (addListToQueue (rest lst) queue2 ))
-     (while (not (empty? queue))
-      (do
-        (def head (peek queue))
-        (if (= (type head) (type '(1))) 
-          (do
-           (def resthead (rest head))
-           (def queue (addListToQueue resthead queue))
-           (if (< (rand(- (* (* 10 n) keep-short) 1)) 9)
-            (def winner head)))
-          (do
-            (if (< (rand (- (* (* 10 n) keep-short) 1)) 1)
-              (def winner head))))
-        (def queue (pop queue))
-        (def n (inc n))))
-      winner
-    )
-  )
-)
+  (let [keep-short (if (> 0 keep-short) 2 1)]
+   (loop [queue clojure.lang.PersistentQueue/EMPTY n 1 winner lst]
+     (if (= n 1) 
+       (recur (reduce conj queue (rest lst)) (+ n 1) lst)
+       (if (not (empty? queue)) 
+                (let [tree (peek queue) queue2 (pop queue)]
+                  (recur (if (seq? tree) (reduce conj queue2 (rest tree)) queue2) (+ n 1) (if (< (rand-int (- (* (* 10 n) keep-short) 1)) (if (seq? tree) 9 1)) tree winner)))
+                winner)))))
 
 (defn set-subtree [new-subtree old-subtree program]
   "takes a program and two subtrees. one of them is what you are replacing and one is what you are replacing with"
@@ -156,7 +141,7 @@
 
 (defn just-do-it [funs argmap terminals pop-size max-depth fit-func best-value gens]
   (prn (loop [gen (gen-zero funs argmap terminals pop-size max-depth) best-of-run nil  gens-completed 0]
-    (prn (map #(get % :program) gen))
+    (prn best-of-run)
     (if (< gens-completed gens)
       (let [gen (run-fitness gen fit-func best-value)]
         (let [best-of-gen (first gen)]
@@ -172,5 +157,5 @@
 "I don't do a whole lot ... yet."
   [& args]
   (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
-    (just-do-it functions function-args terminals 50 6 #(eval %) 117 200)))
+    (just-do-it functions function-args terminals 50 6 #(eval %) 2000 200)))
 
