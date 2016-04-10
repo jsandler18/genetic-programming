@@ -92,15 +92,19 @@
   ;TODO write this
   1)
 
-(defn set-nth-subtree [program]
-  ;TODO write this
-  '(+ 1 1))
+(defn set-subtree [new-subtree old-subtree program]
+  "takes a program and two subtrees. one of them is what you are replacing and one is what you are replacing with"
+  (map #(if (= % old-subtree)
+    new-subtree
+    (if (seq? %)
+      (set-nth-subtree new-subtree old-subtree %)
+      %)) program))
 
 (defn crossover [parent1 parent2]
   "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a list of 2 elements"
   (let [too-tall (- (+ (height parent1) (height parent2)) 20)];if the sum of the heights are above 20, too-tall wil be > 0, and get-rand will make it more likely to pick from the top
     (let [cross1 (get-cross-point parent1) cross2 (get-cross-point parent2)]
-      ((set-nth-subtree (first cross2) parent1 (first (rest cross2))) (set-nth-subtree (first cross1) parent2 (first (rest (cross1))))))))
+      ((set-subtree cross2 cross1 parent1)) (set-subtree cross1 cross2 parent2))))
       
 (defn -main
 "I don't do a whole lot ... yet."
