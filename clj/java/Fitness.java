@@ -2,8 +2,11 @@ import clojure.java.api.Clojure;
 import clojure.lang.*;
 
 public class Fitness {
-    public static Object fitness(String program){
-        new RT();
-        return clojure.lang.Compiler.load(new java.io.StringReader("(do (def x 100) (eval " + program + " ))"));
+    public static Object fitness(Object program){
+        IFn eval = Clojure.var("clojure.core", "eval");
+        IFn type = Clojure.var("clojure.core", "type");
+        String pgm = "(let [x 100] " + program.toString()+ ")";
+        return eval.invoke(Clojure.read(pgm));
     }
 }
+//(eval (cons 'let (cons '[x 100] (list %))))

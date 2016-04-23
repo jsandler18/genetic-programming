@@ -2,6 +2,7 @@
   (:gen-class
 :name Core ))
 
+
 (defn full [functions function-args terminals level maxlevels]
 "Creates a program tree that is a full tree (all terminal leaves are on the same level)."
   ;gets a random index in the function vector
@@ -101,11 +102,11 @@
 
 (defn set-subtree [new-subtree old-subtree program]
   "takes a program and two subtrees. one of them is what you are replacing and one is what you are replacing with"
-  (map #(if (= % old-subtree)
+  (seq (map #(if (= % old-subtree)
     new-subtree
     (if (seq? %)
       (set-subtree new-subtree old-subtree %)
-      %)) program))
+      %)) program)))
 
 (defn crossover [parent1 parent2]
   "takes 2 parents and performs crossover on them, yeilding 2 new children, which will be returned in a vector of 2 elements"
@@ -131,7 +132,7 @@
         (if (< n crossover-times)
           (let [p1 (get (pick-individual programs) :program) p2 (get (pick-individual programs) :program)]
             (let [crossed (crossover p1 p2)]
-            (recur (+ n 2) (concat lst [(ProgramFitness. (first crossed) nil nil nil nil) (ProgramFitness. (first (rest crossed)) nil nil nil nil)]))))
+              (recur (+ n 2) (concat lst [(ProgramFitness. (first crossed) nil nil nil nil) (ProgramFitness. (first (rest crossed)) nil nil nil nil)]))))
           (recur (+ n 1) (cons (pick-individual programs) lst)))
         (into [] lst)))))
 
@@ -141,7 +142,7 @@
 
 (defn just-do-it [funs argmap terminals pop-size max-depth fit-func best-value gens]
   (prn (loop [gen (gen-zero funs argmap terminals pop-size max-depth) best-of-run nil  gens-completed 0]
-    (prn best-of-run)
+   (prn gens-completed)
     (if (< gens-completed gens)
       (let [gen (run-fitness gen fit-func best-value)]
         (let [best-of-gen (first gen)]
@@ -151,11 +152,12 @@
                                              best-of-gen
                                              (if (< (get best-of-run :standardized) (get best-of-gen :standardized))
                                                     best-of-gen
-                                                    best-of-run)) (+ gens-completed 1)))))))))
+                                                    best-of-run)) (+ gens-completed 1))))) best-of-run))))
+
 
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
-  (let [functions '[+ - *] function-args '[2 2 2] terminals '[1 2 3 4 5 6 7 8 9]]
-    (just-do-it functions function-args terminals 50 6 #(eval %) 2000 200)))
+  (let [functions '[+ - *]  function-args '[2 2 2 1] terminals '[x 1 2 3 4 5 6 7 8 9]]
+    (just-do-it functions function-args terminals 50 6 #(Fitness/fitness %) 2000 20)))
 
