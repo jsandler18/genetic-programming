@@ -158,6 +158,9 @@
 (defn -main
 "I don't do a whole lot ... yet."
   [& args]
-  (let [functions '[+ - *]  function-args '[2 2 2 1] terminals '[x 1 2 3 4 5 6 7 8 9]]
-    (just-do-it functions function-args terminals 50 6 #(Fitness/fitness %) 2000 20)))
+  (just-do-it '[+ - * FitnessCart/safeDiv FitnessCart/gt FitnessCart/abs] '[2 2 2 2 2 1] '[x v -1] 50 6 #(FitnessCart/fitness %) 0 20))
+
+;  (FitnessCart/go))
+;  (let [functions '[+ - * FitnessTest/safeDiv]  function-args '[2 2 2 2] terminals '[x 1 2 3 4 5 6 7 8 9]]
+;    (just-do-it functions function-args terminals 50 6 #(FitnessTest/fitness %) 2000 20)))
 
